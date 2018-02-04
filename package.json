@@ -1,0 +1,27 @@
+{
+  "name": "home-monit",
+  "version": "0.0.1",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "camera": "node src/cli/camera.js",
+    "temper": "node src/cli/tamper.js",
+    "ups": "node src/cli/ups.js",
+    "test": "echo 'Test are not implemented'",
+    "lint": "eslint src"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv-safe": "4.0.4",
+    "node-nut": "1.0.1",
+    "node-onvif": "0.1.2",
+    "request": "2.83.0",
+    "systeminformation": "3.33.18",
+    "temper1": "0.0.9"
+  },
+  "devDependencies": {
+    "eslint": "4.17.0"
+  }
+}
