@@ -5,10 +5,15 @@ const dotEnvSafe = require('dotenv-safe');
 dotEnvSafe.load({path: __dirname + '/../../.env'});
 
 const config = {
+  submit: {
+    host: process.env.SUBMIT_HOST
+  },
   temper: {
     deviceId: 0
   },
   camera: {
+    host: process.env.CAMERA_HOST,
+    port: process.env.CAMERA_PORT,
     profileToken: '000',
     snapShotLink: '',
     connection: {
@@ -27,7 +32,7 @@ const config = {
   },
   files: {
     dir: process.env.FILES_DIR,
-    threshold: 500,
+    threshold: 30000, // milliseconds
     limit: 100
   }
 };

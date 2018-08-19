@@ -9,6 +9,7 @@ const ups = require('./modules/ups');
 const armbian = require('./modules/armbian');
 const files = require('./modules/files');
 const socket = require('./modules/socket');
+const submit = require('./modules/submit');
 
 // TODO add logger
 
@@ -21,45 +22,63 @@ files.init(config.files);
 console.log('monitoring started');
 
 (async () => {
-  await camera.moveToPreset('preset1');
+  await camera.moveToPreset(config.camera.presetTokens[1]);
 })();
 
-setInterval(() => {
-  armbian.getStatus()
-    .then(data => console.log('Armbian status', data))
-    .catch(error => console.log('CPU temp error', error));
+async function getStatuses() {
+  return {
+    armbianStatus: await armbian.getStatus(),
+    temperature: await temper.getTemperature(),
+    upsStatus: await ups.getStatus()
+  };
+}
 
-  temper.getTemperature()
-    .then(temp => console.log('temperature', temp))
-    .catch(error => console.log('temper error', error));
-  ups.getStatus()
-    .then(status => {
-      console.log('ups status', status);
+setInterval(() => {
+  // const armbianStatus = armbian.getStatus();
+  // const temperature = temper.getTemperature();
+  // const upsStatus = ups.getStatus();
+
+  getStatuses()
+    .then(res => {
+      console.log('before post');
+      submit.postStatus(config, 'regular', res);
+      console.log('statuses', res)
     })
-    .catch(error => console.log('ups error', error));
-}, 30 * 1000);
+    .catch(error => console.log('statuses error', error));
+
+  // Promise.all([armbianStatus, temperature, upsStatus])
+  //   .then(values => {
+  //     console.log({
+  //       armbianStatus: values[0],
+  //       temperature: values[1],
+  //       upsStatus: values[2]
+  //     });
+  //   })
+  //   .catch(error => console.log('Promise all error', error));
+}, 60 * 1000);
 
 
 // clean old images
 setInterval(() => {
   files.rotateFiles();
-}, 2 * 60 * 1000);
+}, 10 * 60 * 1000);
 
 // monitor movement
-files.monitorFiles();
+files.monitorFiles((filePath) => submit.postImage(config, 'alarm', filePath));
 
 // make shots
-async function foo() {
-  await camera.moveToPreset('preset1'); // preset1 Num1
-  await socket.getImage(config);
-  await camera.moveToPreset('preset0'); // preset0 Num0
+async function makeShots() {
+  await camera.moveToPreset(config.camera.presetTokens[0]); // preset1 Num1
+  const imagePath = await socket.getImage(config);
+  submit.postImage(config, 'regular', imagePath);
+  await camera.moveToPreset(config.camera.presetTokens[1]); // preset0 Num0
 }
 
 setInterval(() => {
-   // only during the daylight
+   // TODO only during the daylight
   console.log('going to save image');
-  foo()
+  makeShots()
     .then(res => console.log('rotation finished', res))
     .catch(error => console.log('image error', error));
-}, 40 * 1000);
+}, 60 * 1000);
 

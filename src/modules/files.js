@@ -11,13 +11,16 @@ function init(config) {
   limit = config.limit;
 }
 
-function monitorFiles()
+function monitorFiles(callback)
 {
   fs.watch(dir, (eventType, filename) => {
     console.log(eventType); //event type = change
     if (filename) {
       // check if exists and upload
       console.log('movement', eventType, filename);
+      console.log(dir, filename);
+      console.log(path.join(dir, filename));
+      callback(path.join(dir, filename), eventType);
     }
   });
 }
